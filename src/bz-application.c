@@ -39,6 +39,9 @@
 #include "bz-flathub-state.h"
 #include "bz-flatpak-entry.h"
 #include "bz-flatpak-instance.h"
+#include "bz-apt-instance.h"
+#include "bz-snap-instance.h"
+#include "bz-deb-instance.h"
 #include "bz-gnome-shell-search-provider.h"
 #include "bz-hash-table-object.h"
 #include "bz-inspector.h"
@@ -69,6 +72,9 @@ struct _BzApplication
   BzFlathubState             *flathub;
   BzFlathubState             *tmp_flathub;
   BzFlatpakInstance          *flatpak;
+  BzAptInstance              *apt;
+  BzSnapInstance             *snap;
+  BzDebInstance              *deb;
   BzGnomeShellSearchProvider *gs_search;
   BzMainConfig               *config;
   BzNewlineParser            *txt_blocklist_parser;
@@ -793,6 +799,36 @@ init_fiber (GWeakRef *wr)
     return dex_future_new_for_error (g_steal_pointer (&local_error));
   bz_transaction_manager_set_backend (self->transactions, BZ_BACKEND (self->flatpak));
   bz_state_info_set_backend (self->state, BZ_BACKEND (self->flatpak));
+
+  g_clear_object (&self->apt);
+  self->apt = dex_await_object (bz_apt_instance_new (), &local_error);
+  if (self->apt != NULL)
+    g_info ("APT backend initialized successfully");
+  else
+    {
+      g_info ("APT backend not available: %s", local_error->message);
+      g_clear_error (&local_error);
+    }
+
+  g_clear_object (&self->snap);
+  self->snap = dex_await_object (bz_snap_instance_new (), &local_error);
+  if (self->snap != NULL)
+    g_info ("Snap backend initialized successfully");
+  else
+    {
+      g_info ("Snap backend not available: %s", local_error->message);
+      g_clear_error (&local_error);
+    }
+
+  g_clear_object (&self->deb);
+  self->deb = dex_await_object (bz_deb_instance_new (), &local_error);
+  if (self->deb != NULL)
+    g_info (".deb backend initialized successfully");
+  else
+    {
+      g_info (".deb backend not available: %s", local_error->message);
+      g_clear_error (&local_error);
+    }
 
   has_flathub = dex_await_boolean (
       bz_flatpak_instance_has_flathub (self->flatpak, NULL),
@@ -2583,7 +2619,31 @@ command_line_open_location (BzApplication           *self,
         open_flatpakref_take (self, g_file_new_for_uri (location));
     }
   else if (g_path_is_absolute (location))
-    open_flatpakref_take (self, g_file_new_for_path (location));
+    {
+      if (g_str_has_suffix (location, ".deb"))
+        {
+          GFile *file = g_file_new_for_path (location);
+          if (self->deb != NULL)
+            {
+              g_autoptr (GError) error = NULL;
+              g_autofree char *result  = NULL;
+              
+              result = dex_await_string (
+                  bz_backend_load_local_package (BZ_BACKEND (self->deb), file, NULL),
+                  &error);
+              
+              if (result != NULL)
+                g_info ("Successfully loaded .deb package: %s", result);
+              else
+                g_warning ("Failed to load .deb package: %s", error->message);
+            }
+          else
+            g_warning (".deb backend not available");
+          g_object_unref (file);
+        }
+      else
+        open_flatpakref_take (self, g_file_new_for_path (location));
+    }
   else
     {
       const char *cwd = NULL;
