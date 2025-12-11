@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bazaar - Web Client</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>🏪 Bazaar</h1>
+                <p class="subtitle">Browse and manage Flatpak applications</p>
+            </div>
+            <div class="header-actions">
+                <input type="text" id="search-input" placeholder="Search applications..." class="search-input">
+                <button id="refresh-btn" class="btn btn-primary">🔄 Refresh</button>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab active" data-tab="explore">Explore</button>
+            <button class="tab" data-tab="installed">Installed</button>
+            <button class="tab" data-tab="updates">Updates</button>
+        </nav>
+
+        <main>
+            <div id="explore" class="tab-content active">
+                <h2>Featured Applications</h2>
+                <div id="featured-apps" class="app-grid">
+                    <div class="loading">Loading applications...</div>
+                </div>
+            </div>
+
+            <div id="installed" class="tab-content">
+                <h2>Installed Applications</h2>
+                <div id="installed-apps" class="app-grid">
+                    <div class="loading">Loading installed applications...</div>
+                </div>
+            </div>
+
+            <div id="updates" class="tab-content">
+                <h2>Available Updates</h2>
+                <div id="updates-apps" class="app-grid">
+                    <div class="loading">Checking for updates...</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="app-detail-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="app-detail-content">
+                <!-- App details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
