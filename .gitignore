@@ -1,4 +1,5 @@
 build
+_build
 .cache
 .flatpak-builder
 rpmbuild
@@ -8,5 +9,7 @@ repo
 gpgme
 libassuan
 libxml2
+*.pyc
+__pycache__
 
 /subprojects/blueprint-compiler

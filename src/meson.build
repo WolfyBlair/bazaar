@@ -278,3 +278,18 @@ executable('bazaar', bz_sources, gdbus_src, marshalers,
            dependencies: bz_deps,
            install: true,
 )
+
+web_server_sources = [
+  'bz-web-server.c',
+  'web-main.c',
+]
+
+web_server_deps = [
+  libsoup_dep,
+  json_glib_dep,
+]
+
+executable('bazaar-web-server', web_server_sources,
+           dependencies: web_server_deps,
+           install: false,
+)
